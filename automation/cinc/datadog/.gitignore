@@ -1,0 +1,15 @@
+# Cinc generated files
+cookbooks/
+local-mode-cache/
+nodes/
+cinc_guid
+
+# Berkshelf cache
+.berkshelf/
+
+# Logs
+*.log
+
+# Secrets
+*.key
+*.pem

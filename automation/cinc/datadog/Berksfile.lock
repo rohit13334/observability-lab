@@ -1,0 +1,11 @@
+DEPENDENCIES
+  apt
+  datadog
+  yum
+
+GRAPH
+  apt (8.0.0)
+  datadog (4.22.5)
+    apt (>= 0.0.0)
+    yum (>= 3.0)
+  yum (8.0.0)
