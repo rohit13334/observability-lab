@@ -1,0 +1,173 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+  # journald logs
+  #
+  # When installing otelcol as a linux package, you will most likely need to add
+  # the otelcol-contrib or otel user to the systemd-journal group. The exact
+  # user and group might vary depending on your package and linux distribution
+  # of choice.
+  # For example:
+  # usermod -aG systemd-journal otelcol-contrib
+  journald:
+  # Host metrics
+  hostmetrics:
+    scrapers:
+      cpu:
+        metrics:
+          system.cpu.utilization:
+            enabled: true
+          system.cpu.logical.count:
+            enabled: true
+      disk:
+      load:
+      filesystem:
+        exclude_mount_points:
+          mount_points:
+            - /dev/*
+            - /proc/*
+            - /sys/*
+            - /run/k3s/containerd/*
+            - /var/lib/docker/*
+            - /var/lib/kubelet/*
+            - /snap/*
+          match_type: regexp
+        exclude_fs_types:
+          fs_types:
+            - autofs
+            - binfmt_misc
+            - bpf
+            - cgroup2
+            - configfs
+            - debugfs
+            - devpts
+            - devtmpfs
+            - fusectl
+            - hugetlbfs
+            - iso9660
+            - mqueue
+            - nsfs
+            - overlay
+            - proc
+            - procfs
+            - pstore
+            - rpc_pipefs
+            - securityfs
+            - selinuxfs
+            - squashfs
+            - sysfs
+            - tracefs
+          match_type: strict
+      memory:
+        metrics:
+          system.memory.utilization:
+            enabled: true
+          system.memory.limit:
+            enabled: true
+      network:
+      paging:
+        metrics:
+          system.paging.usage:
+            enabled: true
+
+      processes:
+      process:
+        mute_process_exe_error: true
+        mute_process_io_error: true
+        mute_process_user_error: true
+      system:
+        metrics:
+          system.uptime:
+            enabled: true
+exporters:
+  otlphttp/grafana_cloud:
+    endpoint: "${env:GRAFANA_CLOUD_OTLP_ENDPOINT}"
+    auth:
+      authenticator: basicauth/grafana_cloud
+extensions:
+  basicauth/grafana_cloud:
+    client_auth:
+      username: "${env:GRAFANA_CLOUD_INSTANCE_ID}"
+      password: "${env:GRAFANA_CLOUD_API_KEY}"
+
+processors:
+  memory_limiter:
+    check_interval: 5s
+    limit_percentage: 80
+    spike_limit_percentage: 25
+  resourcedetection:
+    detectors: [env, system]
+  transform/promote_metric_attributes:
+    metric_statements:
+      - set(datapoint.attributes["host.name"],resource.attributes["host.name"])
+  transform/logs_journald:
+    log_statements:
+      - set(log.attributes,log.body)
+      - set(log.body,log.body["MESSAGE"])
+      - set(resource.attributes["service.name"],log.attributes["_SYSTEMD_UNIT"])
+      - delete_key(log.attributes,"MESSAGE")
+
+connectors:
+  grafanacloud/connector:
+    host_identifiers: ["host.id", "k8s.node.uid", "k8s.node.name", "host.name"]
+
+service:
+  extensions: [basicauth/grafana_cloud]
+  pipelines:
+    traces:
+      receivers: ["otlp"]
+      processors: ["memory_limiter", "resourcedetection"]
+      exporters:
+        - otlphttp/grafana_cloud
+        - grafanacloud/connector
+    metrics:
+      receivers:
+        - otlp
+        - grafanacloud/connector
+        - hostmetrics
+      processors:
+        [
+          "memory_limiter",
+          "resourcedetection",
+          "transform/promote_metric_attributes",
+        ]
+      exporters:
+        - otlphttp/grafana_cloud
+    logs/otlp:
+      receivers: ["otlp"]
+      processors: ["memory_limiter", "resourcedetection"]
+      exporters:
+        - otlphttp/grafana_cloud
+    logs/journald:
+      receivers: ["journald"]
+      processors:
+        ["memory_limiter", "resourcedetection", "transform/logs_journald"]
+      exporters:
+        - otlphttp/grafana_cloud
+  telemetry:
+    resource:
+      host.name: "${env:HOSTNAME}"
+    metrics:
+      readers:
+        - periodic:
+            exporter:
+              otlp:
+                protocol: http/protobuf
+                endpoint: "${env:GRAFANA_CLOUD_OTLP_ENDPOINT}/v1/metrics"
+                headers:
+                  - name: "authorization"
+                    value: "${env:GRAFANA_CLOUD_BASIC_AUTH_HEADER}"
+    logs:
+      processors:
+        - batch:
+            exporter:
+              otlp:
+                protocol: http/protobuf
+                endpoint: "${env:GRAFANA_CLOUD_OTLP_ENDPOINT}/v1/logs"
+                headers:
+                  - name: "authorization"
+                    value: "${env:GRAFANA_CLOUD_BASIC_AUTH_HEADER}"
