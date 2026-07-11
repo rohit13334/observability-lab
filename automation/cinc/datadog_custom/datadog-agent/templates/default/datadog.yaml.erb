@@ -1,0 +1,18 @@
+##
+## Managed by Cinc
+##
+
+api_key: <%= node['datadog']['api_key'] %>
+
+site: <%= node['datadog']['site'] %>
+
+tags:
+  - env:<%= node['datadog']['env'] %>
+
+logs_enabled: <%= node['datadog']['logs_enabled'] %>
+
+apm_config:
+  enabled: <%= node['datadog']['apm_enabled'] %>
+
+process_config:
+  enabled: <%= node['datadog']['process_agent_enabled'] %>
