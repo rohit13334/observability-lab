@@ -9,7 +9,7 @@
 # Cookbook:: datadog-agent
 # Recipe:: default
 #
-
+include_recipe 'datadog-agent::secrets'
 include_recipe 'datadog-agent::repository'
 
 include_recipe 'datadog-agent::install'

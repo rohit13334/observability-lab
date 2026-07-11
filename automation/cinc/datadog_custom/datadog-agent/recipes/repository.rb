@@ -2,20 +2,16 @@
 # Cookbook:: datadog-agent
 # Recipe:: repository
 #
-
-
-# Install required packages
+# Configures the Datadog APT repository.
+#
 
 package %w(
   curl
   gnupg
-  apt-transport-https
 ) do
   action :install
 end
 
-# Create a directory that is used by ubuntu for keys 
-#
 
 directory '/usr/share/keyrings' do
   owner 'root'
@@ -25,46 +21,44 @@ directory '/usr/share/keyrings' do
 end
 
 
-# Download the GPG key
-#
-remote_file '/usr/share/keyrings/datadog-archive-keyring.gpg' do
+remote_file '/tmp/datadog.key' do
   source 'https://keys.datadoghq.com/DATADOG_APT_KEY_CURRENT.public'
+  owner 'root'
+  group 'root'
   mode '0644'
   action :create
 end
 
 
-# Add Template resource to create  /etc/apt/sources.list.d/datadog.list
-#
+execute 'dearmor datadog gpg key' do
+  command <<~EOH
+    gpg --batch --yes \
+      --dearmor \
+      --output /usr/share/keyrings/datadog-archive-keyring.gpg \
+      /tmp/datadog.key
+  EOH
+
+  creates '/usr/share/keyrings/datadog-archive-keyring.gpg'
+end
+
+
+file '/usr/share/keyrings/datadog-archive-keyring.gpg' do
+  owner 'root'
+  group 'root'
+  mode '0644'
+end
+
+
+apt_update 'update package cache' do
+  action :nothing
+end
+
 
 template '/etc/apt/sources.list.d/datadog.list' do
   source 'datadog.list.erb'
   owner 'root'
   group 'root'
   mode '0644'
-end
 
-# This creates  manually /etc/apt/sources.list.d/datadog.list
-#
-file '/etc/apt/sources.list.d/datadog.list' do
-  content <<~EOF
-    deb [signed-by=/usr/share/keyrings/datadog-archive-keyring.gpg] https://apt.datadoghq.com stable 7
-  EOF
-
-  owner 'root'
-  group 'root'
-  mode '0644'
   notifies :update, 'apt_update[update package cache]', :immediately
 end
-
-apt_update 'update package cache' do
-  action :nothing
-end
-
-# Update APT cache 
-#
-execute 'apt-update' do
-  command 'apt-get update'
-  action :run
-end
-
