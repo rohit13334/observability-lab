@@ -4,9 +4,14 @@
 #
 
 # Datadog Configuration
-default['datadog']['api_key'] = '9464cf3c84cc1eb5ac8970a06c8d0be8'
+default['datadog']['api_key'] = nil
 default['datadog']['site'] = 'datadoghq.com'
 default['datadog']['env'] = 'development'
+
+# AWS Secrets Manager configuration
+
+default['datadog']['secret_name'] = 'datadog/api_key'
+default['datadog']['aws_region'] = 'us-east-1'
 
 # Package
 default['datadog']['package_name'] = 'datadog-agent'
