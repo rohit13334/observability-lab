@@ -3,8 +3,6 @@
 # Recipe:: configure
 #
 
-
-
 template '/etc/datadog-agent/datadog.yaml' do
   source 'datadog.yaml.erb'
   owner 'dd-agent'

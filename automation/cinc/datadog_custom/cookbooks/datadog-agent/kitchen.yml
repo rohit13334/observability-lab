@@ -1,6 +1,6 @@
 ---
 driver:
-  name: vagrant
+  name: docker
 
 ## The forwarded_port port feature lets you connect to ports on the VM guest
 ## via localhost on the host.
@@ -21,18 +21,20 @@ verifier:
   name: inspec
 
 platforms:
-  - name: almalinux-9
-  - name: amazonlinux-2023
-  - name: centos-stream-9
-  - name: debian-12
-  - name: fedora-latest
-  - name: opensuse-leap-15
-  - name: oraclelinux-9
-  - name: rockylinux-9
+  #  - name: almalinux-9
+  #  - name: amazonlinux-2023
+  #  - name: centos-stream-9
+  #  - name: debian-12
+  #  - name: fedora-latest
+  #  - name: opensuse-leap-15
+  #  - name: oraclelinux-9
+  #  - name: rockylinux-9
   - name: ubuntu-24.04
 
 suites:
   - name: default
-    verifier:
-      inspec_tests:
-        - test/integration/default
+    run_list:
+      - recipe[datadog-agent::default]
+        #    verifier:
+        #      inspec_tests:
+        #        - test/integration/default

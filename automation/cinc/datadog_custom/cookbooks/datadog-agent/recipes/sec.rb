@@ -1,6 +1,6 @@
 
 execute 'retrieve datadog api key' do
-command <<~EOH
+  command <<~EOH
 set -e
 aws secretsmanager get-secret-value
 --secret-id datadog/api_key
@@ -9,21 +9,20 @@ aws secretsmanager get-secret-value
 > /tmp/datadog-secret.json
 EOH
 
-sensitive true
+  sensitive true
 end
 
 ruby_block 'load datadog secret' do
-block do
-require 'json'
+  block do
+    require 'json'
 
-secret = JSON.parse(
-  ::File.read('/tmp/datadog-secret.json')
-)
+    secret = JSON.parse(
+      ::File.read('/tmp/datadog-secret.json')
+    )
 
-node.default['datadog']['api_key'] =
-  secret['api_key']
+    node.default['datadog']['api_key'] =
+      secret['api_key']
+  end
 
-end
-
-action
+  action
 end

@@ -1,10 +1,10 @@
 name 'datadog-agent'
 maintainer 'Rohit'
-maintainer_email 'you@example.com'
+maintainer_email 'rohitdangi334@google.com'
 license 'Apache-2.0'
 description 'Installs/Configures datadog-agent'
 version '0.1.0'
-chef_version '>= 18.0'
+chef_version '>= 17.0'
 
 supports 'ubuntu'
 # The `issues_url` points to the location where issues for this cookbook are

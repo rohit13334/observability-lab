@@ -8,14 +8,13 @@ service 'datadog-agent' do
   ignore_failure true
 end
 
-
 package node['datadog']['package_name'] do
   action :remove
 end
 
-
 if node['datadog']['remove_config']
-directory '/etc/datadog-agent' do
-  action :delete
-  recursive true
+  directory '/etc/datadog-agent' do
+    action :delete
+    recursive true
+  end
 end

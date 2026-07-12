@@ -12,7 +12,6 @@ package %w(
   action :install
 end
 
-
 directory '/usr/share/keyrings' do
   owner 'root'
   group 'root'
@@ -20,8 +19,8 @@ directory '/usr/share/keyrings' do
   action :create
 end
 
-
-remote_file '/tmp/datadog.key' do
+remote_file "#{Chef::Config[:file_cache_path]}/datadog.key" do
+  # remote_file '/tmp/datadog.key' do   \\ cookstyle doesn't like hardcoding of the path
   source 'https://keys.datadoghq.com/DATADOG_APT_KEY_CURRENT.public'
   owner 'root'
   group 'root'
@@ -29,18 +28,16 @@ remote_file '/tmp/datadog.key' do
   action :create
 end
 
-
 execute 'dearmor datadog gpg key' do
   command <<~EOH
     gpg --batch --yes \
       --dearmor \
       --output /usr/share/keyrings/datadog-archive-keyring.gpg \
-      /tmp/datadog.key
+      #{Chef::Config[:file_cache_path]}/datadog.key
   EOH
 
   creates '/usr/share/keyrings/datadog-archive-keyring.gpg'
 end
-
 
 file '/usr/share/keyrings/datadog-archive-keyring.gpg' do
   owner 'root'
@@ -48,11 +45,9 @@ file '/usr/share/keyrings/datadog-archive-keyring.gpg' do
   mode '0644'
 end
 
-
 apt_update 'update package cache' do
   action :nothing
 end
-
 
 template '/etc/apt/sources.list.d/datadog.list' do
   source 'datadog.list.erb'

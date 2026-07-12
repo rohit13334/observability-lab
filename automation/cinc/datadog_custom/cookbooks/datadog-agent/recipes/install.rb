@@ -3,8 +3,7 @@
 # Recipe:: install
 #
 
-# Chef doesn't know that it needs the repository first. Hence need to add the following on the top 
-
+# Chef doesn't know that it needs the repository first. Hence need to add the following on the top
 
 # This attribute is already defined in the attributes
 #
